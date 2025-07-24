@@ -197,7 +197,7 @@ def rendPdf():
     attendance_percentage = (present_count / total_students * 100) if total_students > 0 else 0
 
     
-    pdf_file = "attendance.pdf"
+    pdf_file = "static/attendance.pdf"
     doc = SimpleDocTemplate(pdf_file, pagesize=letter)
     elements = []
     styles = getSampleStyleSheet()
@@ -261,7 +261,7 @@ def rendPdf():
     with open('which.txt', 'w') as f:
         f.write("unknown")
 
-    return "Thanks for using our system pdf avaiable at /attendance.pdf"
+    return "Thanks for using our system. PDF available at <a href='/static/attendance.pdf'>/static/attendance.pdf</a>"
 
 @app.route("/addPresent", methods=['POST'])
 def addPresent():
