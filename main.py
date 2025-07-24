@@ -7,6 +7,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from datetime import datetime
 import os
 import socket
+import shutil
 
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
@@ -166,6 +167,8 @@ def initiate():
     
     #allowing restricted users if the ip is same as before, we wont do that though
     session.clear()
+    if os.path.exists("flask_session"):  # Replace with your folder name
+        shutil.rmtree("flask_session")
     return "Successfully created!"
 
 @app.route("/render")
