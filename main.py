@@ -289,6 +289,6 @@ def addPresent():
         return "Error: No roll number provided", 400
 if __name__ == "__main__":
     local_ip = get_local_ip()
-    print(f"\nAccess the server at: http://{local_ip}:5000 from other devices on your network\nCreate Sheet: http://{local_ip}:5000/create\n Render PDF: http://{local_ip}:5000/render")
+    print(f"\n Welcome to attendance system,\n\n Users portal: \033[32mhttp://{local_ip}:5000\033[0m from other devices on your network\n Create Sheet: \033[32mhttp://{local_ip}:5000/create\033[0m\n Render PDF: \033[32mhttp://{local_ip}:5000/render\033[0m\n\n\n All rights reserved by \033[36mBITTO SAHA a.k.a dcnys\033[0m\n\n")
     app.run(host=local_ip, port=5000, debug=True)
     
