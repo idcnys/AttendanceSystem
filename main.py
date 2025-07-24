@@ -198,8 +198,24 @@ def rendPdf():
     present_count = len(present_rolls)
     attendance_percentage = (present_count / total_students * 100) if total_students > 0 else 0
 
-    if os.path.exists("static/attendance.pdf"):
-        os.remove("static/attendance.pdf")
+    # if os.path.exists("static/attendance.pdf"):
+    #     os.remove("static/attendance.pdf")
+    try:
+    # Get absolute path
+        pdf_path = os.path.join(os.getcwd(), "static/attendance.pdf")
+    
+    # Debugging output
+        print(f"Attempting to remove: {pdf_path}")
+        print(f"File exists: {os.path.exists(pdf_path)}")
+        print(f"Write permission: {os.access(pdf_path, os.W_OK)}")
+    
+        if os.path.exists(pdf_path):
+            os.remove(pdf_path)
+            print("File successfully removed")
+        else:
+            print("File does not exist")
+    except Exception as e:
+        print(f"Error removing file: {e}")
     pdf_file = "static/attendance.pdf"
     doc = SimpleDocTemplate(pdf_file, pagesize=letter)
     elements = []
