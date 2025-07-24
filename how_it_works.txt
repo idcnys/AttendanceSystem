@@ -1,0 +1,22 @@
+attendance.pdf
+which.txt
+who.txt
+present_ips.txt
+present.txt
+/templates
+
+are the system files you don't need to modify them.
+flask-session folder will automatically get created.
+
+Working Process:
+1. First Sumon/Rabbi/me will create a attendance sheet, and will provide
+the link with all classmates. 
+it will look like http://ip:5000 now users need to connect to a common
+wifi/hotspot to access the link;
+
+2. Enter the roll -> verify -> I am present
+ on added-> user_ip will be stored, he cannot add more response in that session
+3. One time limit will be provided: after that a pdf will get rendered
+
+
+-Bitto Saha

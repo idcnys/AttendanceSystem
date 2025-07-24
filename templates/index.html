@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f4f4f9;
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+      }
+      h3 {
+        color: #555;
+      }
+      hr {
+        border: 1px solid #ddd;
+        margin: 20px 0;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      input[type="text"] {
+        padding: 8px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 200px;
+      }
+      input[type="button"],
+      input[type="submit"] {
+        padding: 10px;
+        font-size: 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        width: 150px;
+      }
+      input[type="button"]:hover,
+      input[type="submit"]:hover {
+        background-color: #0056b3;
+      }
+      input[type="submit"] {
+        display: none;
+      }
+      input[type="submit"].visible {
+        display: inline-block;
+      }
+      div {
+        margin-top: 10px;
+      }
+      p {
+        margin: 5px 0;
+        color: #333;
+      }
+      #v1 {
+        font-weight: bold;
+      }
+      #v1:empty::before {
+        content: "Please verify";
+        color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="hh">Attendence System</h1>
+    <h3>Teacher Name: {{tname}}</h3>
+    <h3>Subject Name: {{subject}}</h3>
+
+    <form action="/addPresent" method="POST">
+      Roll Number: <input id="roll" required type="text" name="roll" />
+      <input id="verify" type="button" value="Verify me" />
+      <div>
+        Your details: <br />Name :
+        <p id="uname"></p>
+        isVerified:
+        <p id="v1"></p>
+      </div>
+      <input id="submitBtn" type="submit" value="I am present" />
+    </form>
+
+    <script>
+      const users = [
+        {
+          roll: "2403121",
+          name: "MD.TAUSIF AL SAHAD",
+        },
+        {
+          roll: "2403122",
+          name: "MOST. UMME KULSUM",
+        },
+        {
+          roll: "2403123",
+          name: "MD AMINUL ISLAM SIFAT",
+        },
+        {
+          roll: "2403124",
+          name: "YASIR ARAFAT",
+        },
+        {
+          roll: "2403125",
+          name: "DEWAN ABID HASAN",
+        },
+        {
+          roll: "2403126",
+          name: "AFRA TAHSIN ANIKA",
+        },
+        {
+          roll: "2403127",
+          name: "SHADMAN AHMED",
+        },
+        {
+          roll: "2403128",
+          name: "KHUSHBO NAHID",
+        },
+        {
+          roll: "2403129",
+          name: "SUMON MAJUMDER",
+        },
+        {
+          roll: "2403130",
+          name: "MD. ABDUL MUKIT",
+        },
+        {
+          roll: "2403131",
+          name: "ATHAI DEY",
+        },
+        {
+          roll: "2403132",
+          name: "TASNUVA TABASSUM AMY",
+        },
+        {
+          roll: "2403133",
+          name: "SHARIQUL ISLAM",
+        },
+        {
+          roll: "2403134",
+          name: "URBOSHI MAHMUD",
+        },
+        {
+          slecht: "2403135",
+          name: "MD SHADHIN ALI",
+        },
+        {
+          roll: "2403136",
+          name: "PRANTIK PAUL",
+        },
+        {
+          roll: "2403137",
+          name: "AFTAB UDDIN",
+        },
+        {
+          roll: "2403138",
+          name: "ABDULLAH AL BAKI SIFAT",
+        },
+        {
+          roll: "2403139",
+          name: "SUJOY RABIDAS",
+        },
+        {
+          roll: "2403140",
+          name: "TASAQUF AHNAF",
+        },
+        {
+          roll: "2403141",
+          name: "MD SAJID AHMED",
+        },
+        {
+          roll: "2403142",
+          name: "BITTO SAHA",
+        },
+        {
+          roll: "2403143",
+          name: "MD TASDID HOSSAIN ANTOR",
+        },
+        {
+          roll: "2403144",
+          name: "IMRAN KABIR FAHAD",
+        },
+        {
+          roll: "2403145",
+          name: "MD.NAZMUS SAQUIB SINAN",
+        },
+        {
+          roll: "2403146",
+          name: "MD RABIB REHMAN",
+        },
+        {
+          roll: "2403147",
+          name: "MD. MIRAJUL ISLAM",
+        },
+        {
+          roll: "2403148",
+          name: "MD. SAMIUL ISLAM",
+        },
+        {
+          roll: "2403149",
+          name: "AREFIN NOUSED RATUL",
+        },
+        {
+          roll: "2403150",
+          name: "SUPRIO ROY CHOWDHURY",
+        },
+        {
+          roll: "2403151",
+          name: "SHAFAYET HOSSAIN SHUVO",
+        },
+        {
+          roll: "2403152",
+          name: "MD. TANVIR CHOWDHURY",
+        },
+        {
+          roll: "2403153",
+          name: "MA SHIBLI SADIK SIHAB",
+        },
+        {
+          roll: "2403154",
+          name: "MD. MORCHHALIN ALAM AMIO",
+        },
+        {
+          roll: "2403155",
+          name: "ARNOB BENEDICT TUDU",
+        },
+        {
+          roll: "2403156",
+          name: "MD. SHOYKOT MOLLA",
+        },
+        {
+          roll: "2403157",
+          name: "MD.TAHMIM ULLAH",
+        },
+        {
+          roll: "2403158",
+          name: "MD. SAROAR JAHAN TIUS",
+        },
+        {
+          roll: "2403159",
+          name: "TAFSIRUL AHMED AZAN",
+        },
+        {
+          roll: "2403160",
+          name: "NILAY PAUL PARTHA",
+        },
+        {
+          roll: "2403161",
+          name: "MD. FAZLA HASSAN RABBI",
+        },
+        {
+          roll: "2403162",
+          name: "SALMAN AHMED SABBIR",
+        },
+        {
+          roll: "2403163",
+          name: "MD TANVIR AHMED",
+        },
+        {
+          roll: "2403164",
+          name: "MOINUDDIN KABIR",
+        },
+        {
+          roll: "2403165",
+          name: "AVIJET CHAKRABORTY",
+        },
+        {
+          roll: "2403166",
+          name: "MD. SAMI SADIK",
+        },
+        {
+          roll: "2403167",
+          name: "MD.MEHEDI HASAN",
+        },
+        {
+          roll: "2403168",
+          name: "MD.TASNIMUL HASAN",
+        },
+        {
+          roll: "2403169",
+          name: "MD. MUBINUR RAHMAN",
+        },
+        {
+          roll: "2403170",
+          name: "ESIKA TANZUM YAME",
+        },
+        {
+          roll: "2403171",
+          name: "MD. SAZEDUL ISLAM SUNNY",
+        },
+        {
+          roll: "2403172",
+          name: "MD FAZLE RABBI",
+        },
+        {
+          roll: "2403173",
+          name: "SAYEM BIN SALIM",
+        },
+        {
+          roll: "2403174",
+          name: "MD. ERAM OHID",
+        },
+        {
+          roll: "2403175",
+          name: "SARA ARPA",
+        },
+        {
+          roll: "2403176",
+          name: "JANNATUL MAWA TANHA",
+        },
+        {
+          roll: "2403177",
+          name: "MD.SAHARIAR JOY",
+        },
+        {
+          roll: "2403178",
+          name: "ANUPAM ANJUM SHAHITYA",
+        },
+        {
+          roll: "2403179",
+          name: "FARDIN BIN ASLAM NUMAN",
+        },
+        {
+          roll: "2403180",
+          name: "A Q M MAHDI HAQUE",
+        },
+      ];
+
+      document.getElementById("verify").addEventListener("click", () => {
+        const roll = document.getElementById("roll").value;
+        const user = users.find((user) => user.roll === roll);
+        const submitBtn = document.getElementById("submitBtn");
+
+        if (user) {
+          document.getElementById("uname").innerText = user.name;
+          document.getElementById("v1").innerText = "OK";
+          submitBtn.classList.add("visible");
+          localStorage.setItem("isRegi", 1);
+        } else {
+          document.getElementById("uname").innerText = "Not found";
+          document.getElementById("v1").innerText = "NOT OK";
+          submitBtn.classList.remove("visible");
+        }
+      });
+    </script>
+  </body>
+</html>
