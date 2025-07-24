@@ -161,8 +161,7 @@ def initiate():
         f.write('')
     with open('present_ips.txt', 'w') as f:
         f.write('')
-    if os.path.exists("attendance.pdf"):
-        os.remove("attendance.pdf")
+    
     
     
     #allowing restricted users if the ip is same as before, we wont do that though
@@ -199,7 +198,8 @@ def rendPdf():
     present_count = len(present_rolls)
     attendance_percentage = (present_count / total_students * 100) if total_students > 0 else 0
 
-    
+    if os.path.exists("static/attendance.pdf"):
+        os.remove("static/attendance.pdf")
     pdf_file = "static/attendance.pdf"
     doc = SimpleDocTemplate(pdf_file, pagesize=letter)
     elements = []
