@@ -8,29 +8,43 @@ from datetime import datetime
 import os
 import socket
 import shutil
+import hashlib
+import time
 
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"  # Use filesystem-based sessions
+app.config["SESSION_TYPE"] = "filesystem"  
 Session(app)
 
-ADMIN_IPS = []  
+ADMIN_IPS = []
 
-def get_present_ips():
-    # returns all ips that has responded to the form
-    with open('present_ips.txt', 'r') as f:
-        return set(f.read().strip().split())
+def get_device_fingerprints():
+    # returns all device fingerprints that have submitted
+    try:
+        with open('present_fingerprints.txt', 'r') as f:
+            return set(f.read().strip().split())
+    except FileNotFoundError:
+        return set()
+
+def generate_device_fingerprint():
+    # Create a unique fingerprint based on multiple factors
+    user_agent = request.headers.get('User-Agent', '')
+    accept_language = request.headers.get('Accept-Language', '')
+    accept_encoding = request.headers.get('Accept-Encoding', '')
+    client_ip = request.remote_addr
     
+    # Combine all factors to create fingerprint
+    fingerprint_data = f"{user_agent}|{accept_language}|{accept_encoding}|{client_ip}"
+    fingerprint = hashlib.md5(fingerprint_data.encode()).hexdigest()
+    return fingerprint
 
-def add_present_ip(ip):
-    with open('present_ips.txt', 'a') as f:
-        f.write(ip+'\n')
+def add_device_fingerprint(fingerprint):
+    with open('present_fingerprints.txt', 'a') as f:
+        f.write(fingerprint + '\n')
 
 def admin_ip_required(f):
     def wrapper(*args, **kwargs):
         client_ip = request.remote_addr
-        
-        # For debugging (prints the connecting IP)
         print(f"Connection attempt from IP: {client_ip}")
         
         if client_ip not in ADMIN_IPS:
@@ -72,7 +86,7 @@ users = {
     "2403137": "AFTAB UDDIN",
     "2403138": "ABDULLAH AL BAKI SIFAT",
     "2403139": "SUJOY RABIDAS",
-    "2403140": "TASAQUF AHNAF",
+    "2403140": "TASAOUF AHNAF",
     "2403141": "MD SAJID AHMED",
     "2403142": "BITTO SAHA",
     "2403143": "MD TASDID HOSSAIN ANTOR",
@@ -117,23 +131,26 @@ users = {
 
 @app.route('/')
 def home():
-    client_ip = request.remote_addr
-    #for those chalak public jara cache clear kore abar attempt korbe
-    if client_ip in get_present_ips():
+    device_fingerprint = generate_device_fingerprint()
+    
+    # Check if this device fingerprint has already submitted
+    if device_fingerprint in get_device_fingerprints():
         return "Error: You have already submitted your attendance from this device", 403
     
-    # valo manush kintu niyot kharap
+    # Session-based restriction
     if session.get('restricted'):
         return "Error: Access to home page restricted for this session", 403
     
-    who = ''
-    which = ''
-    duration = ''
+    try:
+        with open('who.txt', 'r') as f:
+            who = f.read().strip()
+        with open('which.txt', 'r') as f:
+            which = f.read().strip()
+    except FileNotFoundError:
+        who = 'unknown'
+        which = 'unknown'
     
-    with open('who.txt', 'r') as f:
-        who = f.read().strip()
-    with open('which.txt', 'r') as f:
-        which = f.read().strip()
+    duration = ''
     
     return render_template("index.html", tname=who, subject=which, duration=duration)
 
@@ -156,18 +173,21 @@ def initiate():
         f.write(subject)
     
     
-    #clearing prev data, present roll & ips
+    #clearing prev data, present roll & fingerprints
     with open('present.txt', 'w') as f:
         f.write('')
-    with open('present_ips.txt', 'w') as f:
+    with open('present_fingerprints.txt', 'w') as f:
         f.write('')
     
     
-    
-    #allowing restricted users if the ip is same as before, we wont do that though
+    #allowing restricted users if the ip is same as before, we wont do that though xD
     session.clear()
-    if os.path.exists("flask_session"):  # Replace with your folder name
+    
+    ##########THIS SHUTIL WILL NOT WORK IN TERMUX#########
+    if os.path.exists("flask_session"):  
         shutil.rmtree("flask_session")
+    #IN TERMUX COMMENT THIS OUT AND RUN 'source dl.txt' before 'python main.py'
+    ##########THIS SHUTIL WILL NOT WORK IN TERMUX#########
     return "Successfully created!"
 
 @app.route("/render")
@@ -267,32 +287,91 @@ def rendPdf():
 
     return "Thanks for using our system. PDF available at <a href='/static/attendance.pdf'>/static/attendance.pdf</a>"
 
+@app.route("/monitor")
+@admin_ip_required
+def monitor():
+    """Admin monitoring dashboard to detect suspicious activities"""
+    try:
+        with open('present.txt', 'r') as f:
+            present_rolls = f.read().strip().split()
+    except FileNotFoundError:
+        present_rolls = []
+    
+    try:
+        with open('present_fingerprints.txt', 'r') as f:
+            present_fingerprints = f.read().strip().split()
+    except FileNotFoundError:
+        present_fingerprints = []
+    
+    # Generate monitoring report
+    total_submissions = len(present_rolls)
+    unique_fingerprints = len(set(present_fingerprints))
+    
+    # just seeing bad pipol
+    fingerprint_reuse_ratio = (total_submissions / unique_fingerprints) if unique_fingerprints > 0 else 0
+    
+    report = f"""
+    <h2>Attendance Monitoring Dashboard</h2>
+    <p><strong>Total Submissions:</strong> {total_submissions}</p>
+    <p><strong>Unique Device Fingerprints:</strong> {unique_fingerprints}</p>
+    <p><strong>Device Reuse Ratio:</strong> {fingerprint_reuse_ratio:.2f} (submissions per device)</p>
+    
+    {"<p style='color: red;'><strong>⚠️ SUSPICIOUS: High device reuse detected!</strong></p>" if fingerprint_reuse_ratio > 1.2 else ""}
+    {"<p style='color: green;'><strong>✅ All submissions appear real</strong></p>" if fingerprint_reuse_ratio <= 1.0 else ""}
+    
+    <h3>Recent Submissions:</h3>
+    <ul>
+    """
+    
+    for roll in present_rolls[-10:]:
+        name = users.get(roll, "Unknown")
+        report += f"<li>{roll} - {name}</li>"
+    
+    report += "</ul>"
+    report += f"<p><a href='/render'>Generate PDF Report</a> | <a href='/create'>Create New Session</a></p>"
+    
+    return report
+
 @app.route("/addPresent", methods=['POST'])
 def addPresent():
     roll = request.form.get("roll")
-    client_ip = request.remote_addr
+    device_fingerprint = generate_device_fingerprint()
     
-    # jara beshi chalak
-    if client_ip in get_present_ips():
+    
+    if device_fingerprint in get_device_fingerprints():
         return "Error: You have already submitted your attendance from this device", 400
     
+
     if roll:
-        # Validate roll number
         if roll not in users:
             return "Error: Invalid roll number", 400
-        with open("present.txt", "r") as f:
-            existing_rolls = f.read().split()
-            if roll in existing_rolls:
-                return "Error: Roll number already exists", 400
-            with open("present.txt", "a") as f:
-                f.write(f"{roll} ")
-                add_present_ip(client_ip)  # two factor safety
-                session['restricted'] = True  # vai r access pabe na xD
-                return render_template("congo.html")
+        
+        try:
+            with open("present.txt", "r") as f:
+                existing_rolls = f.read().split()
+                if roll in existing_rolls:
+                    return "Error: Roll number already exists", 400
+        except FileNotFoundError:
+            existing_rolls = []
+        
+        # no errs found assuming it real
+        with open("present.txt", "a") as f:
+            f.write(f"{roll} ")
+        
+        # storing a hash for that user
+        add_device_fingerprint(device_fingerprint)
+        
+        
+        # stopping spamming
+        session['restricted'] = True
+        session['submitted_roll'] = roll
+        session['device_fingerprint'] = device_fingerprint
+        
+        return render_template("congo.html")
     else:
         return "Error: No roll number provided", 400
 if __name__ == "__main__":
     local_ip = get_local_ip()
-    print(f"\n Welcome to attendance system,\n\n Users portal: \033[32mhttp://{local_ip}:5000\033[0m from other devices on your network\n Create Sheet: \033[32mhttp://{local_ip}:5000/create\033[0m\n Render PDF: \033[32mhttp://{local_ip}:5000/render\033[0m\n\n\n All rights reserved by \033[36mBITTO SAHA a.k.a dcnys\033[0m\n\n")
+    print(f"\n Welcome to attendance system,\n\n Users portal: \033[32mhttp://{local_ip}:5000\033[0m from other devices on your network\n Create Sheet: \033[32mhttp://{local_ip}:5000/create\033[0m\n Render PDF: \033[32mhttp://{local_ip}:5000/render\033[0m\n Monitor Dashboard: \033[32mhttp://{local_ip}:5000/monitor\033[0m\n\n\n All rights reserved by \033[36mBITTO SAHA a.k.a dcnys\033[0m\n\n")
     app.run(host=local_ip, port=5000, debug=True)
     
